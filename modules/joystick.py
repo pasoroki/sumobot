@@ -32,6 +32,7 @@ class Joystick:
         """
         Get current state of pressed buttons
         """
+        # print("---")
         state = {}
         for event in pygame.event.get():
             if event.type == QUIT:

@@ -1,7 +1,7 @@
 import time
 from threading import Event
 from modules.joystick import Joystick
-from modules.arduino import SumoBot, BotWheel, LEFT, RIGHT
+from modules.arduino import SumoBot, BotWheel
 import pygame
 # from pygame.locals import QUIT, KEYDOWN, KEYUP
 import logging
@@ -10,16 +10,32 @@ import logging
 LOG = logging.getLogger(__name__)
 stop = Event()
 
-left_wheel = BotWheel(
+left_wheel_front = BotWheel(
+    pin         = 6,
+    speed_limit = 1,
+    inverted    = False
+)
+left_wheel_back = BotWheel(
     pin         = 9,
-    speed_limit = 0.5,
+    speed_limit = 1,
+    inverted    = False
+)
+
+right_wheel_front = BotWheel(
+    pin         = 5,
+    speed_limit = 1,
+    inverted    = True
+)
+right_wheel_back = BotWheel(
+    pin         = 10,
+    speed_limit = 1,
     inverted    = True
 )
 
 
 bot = SumoBot(
-    left_wheels  = [left_wheel],
-    right_wheels = [],
+    left_wheels  = [left_wheel_front, left_wheel_back],
+    right_wheels = [right_wheel_front, right_wheel_back],
     port = "/dev/tty.usbmodem14101",
 )
 bot.print_firmata_status()
@@ -234,9 +250,16 @@ joystick = Joystick(stop=stop, width=100, height=100)
 # # global thread
 # # thread.start()
 
+print("Prepare the robot!")
+bot.stop()
+bot.execute()
+
+
+print("Ready to serve")
 while not stop.is_set():
     time.sleep(0.1)
-    data = joystick.get_buttons_state()
+    # data = joystick.get_buttons_state()
+    data = joystick.get_buttons_state
     if data:
         for action in data.keys():
             print(" --> {}".format(action))
@@ -245,6 +268,7 @@ while not stop.is_set():
                 stop.set()
 
             elif action in ("up", 273, pygame.K_UP):
+                print(" UP ")
                 bot.forward()
 
             elif action in ("down", 274, pygame.K_DOWN):
@@ -269,9 +293,11 @@ while not stop.is_set():
                 print(" ELSE ")
                 angle = 0
                 # my.left_servo.set_angle(0)
-
-        print(" -> execute")
-        bot.execute()
+    else:
+        print(".")
+        bot.stop()
+    print(" -> execute")
+    bot.execute()
     # print("ANGLE = {}".format(my.left_servo.get_angle()))
 
 bot.stop()
