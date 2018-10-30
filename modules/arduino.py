@@ -95,8 +95,9 @@ class SumoBot:
     """
     _board = None
 
-    def __init__(self, left_wheels: BotWheel, right_wheels: BotWheel, port: str="/dev/tty.usbmodem14101"):
-        self._board        = pyfirmata.Arduino(port)
+    def __init__(self, left_wheels: list, right_wheels: list, port: str="/dev/tty.usbmodem14101"):
+        self._board        = None
+        # self._board        = pyfirmata.Arduino(port)
         self._left_wheels  = {}
         self._right_wheels = {}
 
@@ -141,7 +142,10 @@ class SumoBot:
         ))
 
     def stop(self):
-        pass
+        for left_wheel, speed in self.left_wheels.items():
+            self.left_wheels[left_wheel] = 0
+        for right_wheel, speed in self.right_wheels.items():
+            self.right_wheels[right_wheel] = 0
 
     def forward(self):
         for left_wheel, speed in self.left_wheels.items():
