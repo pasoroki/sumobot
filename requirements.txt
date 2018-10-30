@@ -1,4 +1,7 @@
-pynput
-zorg_grove
-zorg_firmata
+# pynput
+# zorg_grove
+# zorg_firmata
 pyserial
+pygame
+pyfirmata
+pytest
