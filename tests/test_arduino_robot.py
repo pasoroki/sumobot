@@ -49,3 +49,89 @@ class TestSumoBot:
             assert speed == 1, "Left wheel speeds should be at full speed"
         for speed in bot.right_wheels.values():
             assert speed == 1, "Right wheel speeds should be at full speed"
+
+    def test_move_forward_right__stopped__right_wheels_should_slow_down(self):
+        bot = get_fake_robot(
+            left_wheels=[120],
+            right_wheels=[30]
+        )
+        bot.forward()
+        bot.right()
+        bot.execute()
+
+        for speed in bot.left_wheels.values():
+            assert speed == 2, "Left wheel speeds should be at full speed"
+        for speed in bot.right_wheels.values():
+            assert speed == 0.5, "Right wheel speeds should be at half speed"
+
+    def test_move_forward_left__stopped__left_wheels_should_slow_down(self):
+        bot = get_fake_robot(
+            left_wheels=[120],
+            right_wheels=[30]
+        )
+        bot.forward()
+        bot.left()
+        bot.execute()
+
+        for speed in bot.left_wheels.values():
+            assert speed == 0.5, "Left wheel speeds should be at half speed"
+        for speed in bot.right_wheels.values():
+            assert speed == 2, "Right wheel speeds should be at full speed"
+
+
+    def test_move_backward_right__stopped__right_wheels_should_slow_down(self):
+        bot = get_fake_robot(
+            left_wheels=[120],
+            right_wheels=[30]
+        )
+        bot.backward()
+        bot.right()
+        bot.execute()
+
+        for speed in bot.left_wheels.values():
+            assert speed == -2, "Left wheel speeds should be at full speed"
+        for speed in bot.right_wheels.values():
+            assert speed == -0.5, "Right wheel speeds should be at half speed"
+
+    def test_move_backward_left__stopped__left_wheels_should_slow_down(self):
+        bot = get_fake_robot(
+            left_wheels=[120],
+            right_wheels=[30]
+        )
+        bot.backward()
+        bot.left()
+        bot.execute()
+
+        for speed in bot.left_wheels.values():
+            assert speed == -0.5, "Left wheel speeds should be at half speed"
+        for speed in bot.right_wheels.values():
+            assert speed == -2, "Right wheel speeds should be at full speed"
+
+    def test_rotate_left__stopped__wheels_must_go_sideways(self):
+        bot = get_fake_robot(
+            left_wheels=[120],
+            right_wheels=[30]
+        )
+        bot.left()
+        bot.execute()
+
+        for speed in bot.left_wheels.values():
+            assert speed == -1, "Left wheel speeds should go back"
+        for speed in bot.right_wheels.values():
+            assert speed == 1, "Right wheel speeds should go forward"
+
+    def test_rotate_right__stopped__wheels_must_go_sideways(self):
+        bot = get_fake_robot(
+            left_wheels=[120],
+            right_wheels=[30]
+        )
+        bot.right()
+        bot.execute()
+
+        for speed in bot.left_wheels.values():
+            assert speed == 1, "Left wheel speeds should go forward"
+        for speed in bot.right_wheels.values():
+            assert speed == -1, "Right wheel speeds should go back"
+
+
+

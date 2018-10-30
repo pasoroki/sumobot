@@ -1,6 +1,6 @@
 import pyfirmata
 import logging
-from math import ceil
+from math import ceil, floor
 
 
 LOG = logging.getLogger("arduino")
@@ -96,8 +96,8 @@ class SumoBot:
     _board = None
 
     def __init__(self, left_wheels: list, right_wheels: list, port: str="/dev/tty.usbmodem14101"):
-        self._board        = None
-        # self._board        = pyfirmata.Arduino(port)
+        # self._board        = None
+        self._board        = pyfirmata.Arduino(port)
         self._left_wheels  = {}
         self._right_wheels = {}
 
@@ -167,15 +167,15 @@ class SumoBot:
             self.left_wheels[left_wheel] = speed - extra
         for right_wheel, speed in self.right_wheels.items():
             extra = 1.0
-            if speed > 0:
-                extra = 0.5
+            # if speed > 0:
+            #     extra = 0.5
             self.right_wheels[right_wheel] = speed + extra
 
     def right(self):
         for left_wheel, speed in self.left_wheels.items():
             extra = 1.0
-            if speed > 0:
-                extra = 0.5
+            # if speed > 0:
+            #     extra = 0.5
             self.left_wheels[left_wheel] = speed + extra
         for right_wheel, speed in self.right_wheels.items():
             extra = 1.0
@@ -183,8 +183,21 @@ class SumoBot:
                 extra = 0.5
             self.right_wheels[right_wheel] = speed - extra
 
+    @staticmethod
+    def _normalize_speed(speed):
+        if speed > 0:
+            print(" {} = {} / {}".format(speed, abs(speed), ceil(speed)))
+            speed = abs(speed) / ceil(speed)
+            print("           = {}".format(speed))
+        elif speed < 0:
+            print(" {} = {} / {}".format(speed, abs(speed), floor(speed)))
+            speed = abs(speed) / floor(speed)
+            print("           = {}".format(speed))
+        return speed
+
     def execute(self):
         for left_wheel, speed in self.left_wheels.items():
-            left_wheel.servo.set_angle(speed)
+            left_wheel.servo.set_angle(self._normalize_speed(speed))
+
         for right_wheel, speed in self.right_wheels.items():
-            right_wheel.servo.set_angle(speed)
+            right_wheel.servo.set_angle(self._normalize_speed(speed))
