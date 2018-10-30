@@ -257,9 +257,10 @@ bot.execute()
 
 print("Ready to serve")
 while not stop.is_set():
-    time.sleep(0.1)
+    # time.sleep(0.1)
     # data = joystick.get_buttons_state()
     data = joystick.get_buttons_state
+    # data = joystick.state
     if data:
         for action in data.keys():
             print(" --> {}".format(action))
@@ -294,10 +295,11 @@ while not stop.is_set():
                 angle = 0
                 # my.left_servo.set_angle(0)
     else:
-        print(".")
         bot.stop()
+
     print(" -> execute")
     bot.execute()
+    time.sleep(0.1)
     # print("ANGLE = {}".format(my.left_servo.get_angle()))
 
 bot.stop()

@@ -11,10 +11,12 @@ class Joystick:
     """
     Reads keyboard presses
     """
-    _stop = None
+    _stop  = None
+    _state = None
 
     def __init__(self, stop: Event, width: int=100, height: int=100):
-        self._stop = stop
+        self._stop  = stop
+        self._state = {}
 
         pygame.init()
         BLACK   = (0, 0, 0)
@@ -32,8 +34,7 @@ class Joystick:
         """
         Get current state of pressed buttons
         """
-        # print("---")
-        state = {}
+        # state = {}
         for event in pygame.event.get():
             if event.type == QUIT:
                 pygame.quit()
@@ -41,7 +42,18 @@ class Joystick:
 
             if event.type == KEYDOWN:
                  key = event.key
-                 state[key] = 1
+                 self._state[key] = 1
 
-        return state
+            if event.type == KEYUP:
+                 key = event.key
+                 del(self._state[key])
 
+        # return state
+        # data = [str(key) for key in self._state.keys()]
+        # print(" ".join(data))
+        return self._state
+
+    @property
+    def state(self):
+        print(" ".join(self._state))
+        return self._state

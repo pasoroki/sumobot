@@ -97,12 +97,12 @@ class BotWheel:
         resulting_speed = abs(self.speed_limit * speed * 100)
         available_speed = self.min_max_speed(invert=speed < 0)
 
-        print(f" resulting speed: {resulting_speed}")
-        print(f" available speed: {available_speed}")
+        # print(f" resulting speed: {resulting_speed}")
+        # print(f" available speed: {available_speed}")
 
         total = len(available_speed) - 1
 
-        print(f" total: {total}")
+        # print(f" total: {total}")
 
         if total < 1:
             raise RuntimeError("For given speed settings (global:{} | requested:{}) no possible rotation is found".format(
@@ -260,9 +260,11 @@ class SumoBot:
         for left_wheel, speed in self.left_wheels.items():
             speed = self._normalize_speed(speed)
             angle = left_wheel.get_rotation_for_speed(speed)
-            print(f" l --- SPEED: {speed} | {angle} ({self.left_wheels[left_wheel]})")
+            # if angle != 93:
+            #     print(f" l --- SPEED: {speed} | {angle} ({self.left_wheels[left_wheel]})")
             if self.need_changes(left_wheel, angle):
-                print(" --- L: need changes")
+                # print(" --- L: need changes")
+                print(f" --- L: need changes: {speed} | {angle} ({self.left_wheels[left_wheel]})")
                 left_wheel.set_angle(angle)
 
             # drop speed
@@ -271,9 +273,10 @@ class SumoBot:
         for right_wheel, speed in self.right_wheels.items():
             speed = self._normalize_speed(speed)
             angle = right_wheel.get_rotation_for_speed(speed)
-            print(f" r --- SPEED: {speed} | {angle} ({self.left_wheels[left_wheel]})")
+            # if angle != 93:
+            #     print(f" r --- SPEED: {speed} | {angle} ({self.left_wheels[left_wheel]})")
             if self.need_changes(right_wheel, angle):
-                print(" --- R: need changes")
+                print(f" --- R: need changes: {speed} | {angle} ({self.left_wheels[left_wheel]})")
                 right_wheel.set_angle(angle)
 
             # drop speed
