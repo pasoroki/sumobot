@@ -297,7 +297,7 @@ while not stop.is_set():
     else:
         bot.stop()
 
-    print(" -> execute")
+    # print(" -> execute")
     bot.execute()
     time.sleep(0.1)
     # print("ANGLE = {}".format(my.left_servo.get_angle()))

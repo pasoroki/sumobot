@@ -21,7 +21,8 @@ class BotWheel:
 
         self._full_backward = 85
         self._full_stop     = 93    # No rotation
-        self._full_forward  = 110
+        self._full_forward  = 100
+        # self._full_forward  = 110
 
     @property
     def pin(self):
@@ -62,7 +63,7 @@ class BotWheel:
             pin       = self.pin,
             min_pulse = 544,
             max_pulse = 2400,
-            angle     = 0
+            angle     = 93
         )
 
     def set_angle(self, angle):
@@ -204,27 +205,65 @@ class SumoBot:
 
     def left(self):
         for left_wheel, speed in self.left_wheels.items():
-            extra = 1.0
+            extra = -1.0
+
             if speed > 0:
-                extra = 0.5
-            self.left_wheels[left_wheel] = speed - extra
+                extra = -0.7
+
+            elif speed < 0:
+                extra = 0.7
+            self.left_wheels[left_wheel] = speed + extra
+            # extra = 1.0
+            # if speed > 0:
+            #     extra = 0.2
+            # elif speed < 0:
+            #     extra = 0.2
+            # self.left_wheels[left_wheel] = speed - extra
+
         for right_wheel, speed in self.right_wheels.items():
             extra = 1.0
-            # if speed > 0:
-            #     extra = 0.5
+
+            if speed > 0:
+                extra = 1.0
+
+            elif speed < 0:
+                extra = -1
             self.right_wheels[right_wheel] = speed + extra
+
+            # extra = 1.0
+            # # if speed > 0:
+            # #     extra = 0.5
+            # self.right_wheels[right_wheel] = speed + extra
 
     def right(self):
         for left_wheel, speed in self.left_wheels.items():
             extra = 1.0
-            # if speed > 0:
-            #     extra = 0.5
-            self.left_wheels[left_wheel] = speed + extra
-        for right_wheel, speed in self.right_wheels.items():
-            extra = 1.0
+
             if speed > 0:
-                extra = 0.5
-            self.right_wheels[right_wheel] = speed - extra
+                extra = 1.0
+
+            elif speed < 0:
+                extra = -1.0
+            self.left_wheels[left_wheel] = speed + extra
+
+            # extra = 1.0
+            # # if speed > 0:
+            # #     extra = 0.5
+            # self.left_wheels[left_wheel] = speed + extra
+        for right_wheel, speed in self.right_wheels.items():
+            extra = -1.0
+
+            if speed > 0:
+                extra = -0.7
+
+            elif speed < 0:
+                extra = 0.7
+            self.right_wheels[right_wheel] = speed + extra
+
+            # extra = 1.0
+            # if speed > 0:
+            #     extra = 0.2
+            # self.right_wheels[right_wheel] = speed - extra
 
     @staticmethod
     def _normalize_speed(speed):
@@ -257,29 +296,39 @@ class SumoBot:
         return True
 
     def execute(self):
+        result = ""
+
+        i = 0
         for left_wheel, speed in self.left_wheels.items():
+            i += 1
             speed = self._normalize_speed(speed)
             angle = left_wheel.get_rotation_for_speed(speed)
-            # if angle != 93:
+            if angle != 93:
+                result += f"{i}: {speed:.2f} | {angle}    | "
             #     print(f" l --- SPEED: {speed} | {angle} ({self.left_wheels[left_wheel]})")
             if self.need_changes(left_wheel, angle):
                 # print(" --- L: need changes")
-                print(f" --- L: need changes: {speed} | {angle} ({self.left_wheels[left_wheel]})")
+                # print(f" --- L: need changes: {speed} | {angle} ({self.left_wheels[left_wheel]})")
                 left_wheel.set_angle(angle)
 
             # drop speed
             self.left_wheels[left_wheel] = 0
 
         for right_wheel, speed in self.right_wheels.items():
+            i += 1
             speed = self._normalize_speed(speed)
             angle = right_wheel.get_rotation_for_speed(speed)
+            if angle != 93:
+                result += f"{i}: {speed:.2f} | {angle}    | "
             # if angle != 93:
             #     print(f" r --- SPEED: {speed} | {angle} ({self.left_wheels[left_wheel]})")
             if self.need_changes(right_wheel, angle):
-                print(f" --- R: need changes: {speed} | {angle} ({self.left_wheels[left_wheel]})")
+                # print(f" --- R: need changes: {speed} | {angle} ({self.left_wheels[left_wheel]})")
                 right_wheel.set_angle(angle)
 
             # drop speed
             self.right_wheels[right_wheel] = 0
 
+        if result:
+            print(result)
         sleep(0.1)
