@@ -19,10 +19,10 @@ class BotWheel:
         self._inverted   = inverted
         self._servo      = None    # Actual servo engine
 
+        # Check those values with current servo motor
         self._full_backward = 85
         self._full_stop     = 93    # No rotation
         self._full_forward  = 100
-        # self._full_forward  = 110
 
     @property
     def pin(self):
@@ -67,16 +67,18 @@ class BotWheel:
         )
 
     def set_angle(self, angle):
-        # print(" >>>>> {}    : {}".format(angle, self.servo))
         self.servo.write(angle)
 
-    # @property
-    def min_max_speed(self, invert: bool):
-        # if self.inverted:
-        #     return self._full_stop, self._full_backward
-        # return self._full_stop, self._full_forward
+    def min_max_speed(self, invert: bool=False) -> list:
+        """
+        Get list of available rotation angles from stop to maximum speed
+        This code makes sure to return max speed depending on internal `inverted` flag
+        NOTE:
+            the `invert` flag will invert the internal `inverted` flag
+            this is necessary when we are moving backwards
+        """
 
-        # TODO: This is stupid
+        # TODO: This looks weird, better find a nicer way to get backwards moving speed
         invert = self.inverted if not invert else not self.inverted
 
         if invert:
@@ -97,13 +99,7 @@ class BotWheel:
         """
         resulting_speed = abs(self.speed_limit * speed * 100)
         available_speed = self.min_max_speed(invert=speed < 0)
-
-        # print(f" resulting speed: {resulting_speed}")
-        # print(f" available speed: {available_speed}")
-
         total = len(available_speed) - 1
-
-        # print(f" total: {total}")
 
         if total < 1:
             raise RuntimeError("For given speed settings (global:{} | requested:{}) no possible rotation is found".format(
@@ -115,8 +111,6 @@ class BotWheel:
         return available_speed[ceil(resulting_speed * one_percent)]
 
 
-# my.left_servo.set_angle(0)
-
 class SumoBot:
     """
     Module to control the SumoBot
@@ -124,23 +118,18 @@ class SumoBot:
     _board = None
 
     def __init__(self, left_wheels: list, right_wheels: list, port: str="/dev/tty.usbmodem14101"):
-        # self._board        = None
         self._board        = pyfirmata.Arduino(port)
-        self._left_wheels  = {}
-        self._right_wheels = {}
-        self._current_angle = {}   # Keeping current wheel settings
 
         # Wheels are stored in dictionary:
-        #    wheel object : desired rotation angle / speed
-        # TODO: decide which one to use
+        #    wheel object : desired rotation speed
+        self._left_wheels  = {}
+        self._right_wheels = {}
 
-        # self._board.servo_config(
-        #     pin=9,
-        #     min_pulse=544,
-        #     max_pulse=2400,
-        #     angle=0
-        # )
-        # self.a = self._board.get_pin("d:9:p")
+        # The actual speed is stored in `current_angle` dictionary
+        # This is to avoid duplicated servo config changes
+        self._current_angle = {}
+
+        # TODO: decide which one to use
 
         for left_wheel in left_wheels:
             self._left_wheels[left_wheel] = 0
@@ -150,12 +139,9 @@ class SumoBot:
             self.right_wheels[right_wheel] = 0
             right_wheel.configure_servo(board=self._board)
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """
-        Disconnect from arduino
-        """
-        print("---- EXIT BOT ----")
-        self.board.exit()
+    def __del__(self):
+        if self.board:
+            self.board.exit()
 
     @property
     def board(self):
@@ -177,10 +163,9 @@ class SumoBot:
         """
         Output Firmata board status
         """
-        print(f"pyFirmata version:     {pyfirmata.__version__}")
-        print(f"Hardware:              {self.board.__str__()}")
-        # print(f"Firmata firmware name: {self.board.get_firmware()}")
-        print( "Firmata firmware:      {major}.{minor}".format(
+        print(f"pyFirmata version: {pyfirmata.__version__}")
+        print(f"Hardware:          {self.board.__str__()}")
+        print( "Firmata firmware:  {major}.{minor}".format(
             major = self.board.get_firmata_version()[0],
             minor = self.board.get_firmata_version()[1]
         ))
@@ -213,12 +198,6 @@ class SumoBot:
             elif speed < 0:
                 extra = 0.7
             self.left_wheels[left_wheel] = speed + extra
-            # extra = 1.0
-            # if speed > 0:
-            #     extra = 0.2
-            # elif speed < 0:
-            #     extra = 0.2
-            # self.left_wheels[left_wheel] = speed - extra
 
         for right_wheel, speed in self.right_wheels.items():
             extra = 1.0
@@ -229,11 +208,6 @@ class SumoBot:
             elif speed < 0:
                 extra = -1
             self.right_wheels[right_wheel] = speed + extra
-
-            # extra = 1.0
-            # # if speed > 0:
-            # #     extra = 0.5
-            # self.right_wheels[right_wheel] = speed + extra
 
     def right(self):
         for left_wheel, speed in self.left_wheels.items():
@@ -246,10 +220,6 @@ class SumoBot:
                 extra = -1.0
             self.left_wheels[left_wheel] = speed + extra
 
-            # extra = 1.0
-            # # if speed > 0:
-            # #     extra = 0.5
-            # self.left_wheels[left_wheel] = speed + extra
         for right_wheel, speed in self.right_wheels.items():
             extra = -1.0
 
@@ -260,35 +230,18 @@ class SumoBot:
                 extra = 0.7
             self.right_wheels[right_wheel] = speed + extra
 
-            # extra = 1.0
-            # if speed > 0:
-            #     extra = 0.2
-            # self.right_wheels[right_wheel] = speed - extra
-
     @staticmethod
     def _normalize_speed(speed):
         if speed > 0:
-            # print(" {} = {} / {}".format(speed, abs(speed), ceil(speed)))
             speed = abs(speed) / ceil(speed)
-            # print("           = {}".format(speed))
         elif speed < 0:
-            # print(" {} = {} / {}".format(speed, abs(speed), floor(speed)))
             speed = abs(speed) / floor(speed)
-            # print("           = {}".format(speed))
         return speed
 
     def need_changes(self, wheel, angle):
         """
         Check if wheel need to change its angle position
         """
-        # if wheel not in self.current_angle:
-        #     self.current_angle[wheel] = angle
-        #     return True
-        #
-        # if self.current_angle[wheel] != angle:
-        #     self.current_angle[wheel] = angle
-        #     return True
-
         if self.current_angle.get(wheel) == angle:
             return False
 
@@ -305,10 +258,7 @@ class SumoBot:
             angle = left_wheel.get_rotation_for_speed(speed)
             if angle != 93:
                 result += f"{i}: {speed:.2f} | {angle}    | "
-            #     print(f" l --- SPEED: {speed} | {angle} ({self.left_wheels[left_wheel]})")
             if self.need_changes(left_wheel, angle):
-                # print(" --- L: need changes")
-                # print(f" --- L: need changes: {speed} | {angle} ({self.left_wheels[left_wheel]})")
                 left_wheel.set_angle(angle)
 
             # drop speed
@@ -320,10 +270,7 @@ class SumoBot:
             angle = right_wheel.get_rotation_for_speed(speed)
             if angle != 93:
                 result += f"{i}: {speed:.2f} | {angle}    | "
-            # if angle != 93:
-            #     print(f" r --- SPEED: {speed} | {angle} ({self.left_wheels[left_wheel]})")
             if self.need_changes(right_wheel, angle):
-                # print(f" --- R: need changes: {speed} | {angle} ({self.left_wheels[left_wheel]})")
                 right_wheel.set_angle(angle)
 
             # drop speed
