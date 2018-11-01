@@ -9,8 +9,14 @@ import logging
 LOG = logging.getLogger(__name__)
 stop = Event()
 
+# 5 - yellow
+# 6 - white
+# 9 - blue
+# 10 - green
+
+
 left_wheel_front = BotWheel(
-    pin         = 5,
+    pin         = 6,
     speed_limit = 1,
     inverted    = False
 )
@@ -21,7 +27,7 @@ left_wheel_back = BotWheel(
 )
 
 right_wheel_front = BotWheel(
-    pin         = 6,
+    pin         = 5,
     speed_limit = 1,
     inverted    = True
 )
@@ -33,6 +39,8 @@ right_wheel_back = BotWheel(
 
 
 bot = SumoBot(
+    # left_wheels  = [left_wheel_front],
+    # right_wheels = [],
     left_wheels  = [left_wheel_front, left_wheel_back],
     right_wheels = [right_wheel_front, right_wheel_back],
     port = "/dev/tty.usbmodem14101",
